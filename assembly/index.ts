@@ -26,7 +26,7 @@ export function shrinkWidth(srcImage: Uint8Array, width: u32): Uint8Array {
 
 export function shrink(): Uint8Array {
   const seam = Seam.create(currentImageData, currentWidth);
-  currentImageData = seam.shrinkWidth2();
+  currentImageData = seam.shrinkWidth();
   currentWidth--;
   return currentImageData;
 }
@@ -34,7 +34,7 @@ export function shrink(): Uint8Array {
 export function shrink100(): Uint8Array {
   for (let i = 0; i < 100; i++) {
     const seam = new Seam(currentImageData, currentWidth);
-    currentImageData = seam.shrinkWidth2();
+    currentImageData = seam.shrinkWidth();
     currentWidth--;
   }
   return currentImageData;
@@ -260,25 +260,6 @@ class Seam {
   }
 
   shrinkWidth(): Uint8Array {
-    const seam = this.findVerticalSeam();
-    const newWidth = this.picture.width - 1;
-    const result = new Uint8Array(newWidth * this.picture.height * 4);
-
-    for (let y: i32 = 0; y < this.picture.height; y++) {
-      result.set(
-        this.data.subarray(y * this.width * 4, (y * this.width + seam[y]) * 4),
-        y * newWidth * 4
-      );
-      const rightSide = this.data.subarray(
-        (y * this.width + seam[y] + 1) * 4,
-        (y + 1) * this.width * 4
-      );
-      result.set(rightSide, (y * newWidth + seam[y]) * 4);
-    }
-    return result;
-  }
-
-  shrinkWidth2(): Uint8Array {
     const seam = this.findVerticalSeam();
     const newWidth = this.picture.width - 1;
     const result = this.picture.data; //new Uint8Array(newWidth * this.picture.height * 4);
