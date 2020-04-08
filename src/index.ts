@@ -12,12 +12,12 @@ const initWasm = async () => {
     env: {
       memory,
       abort: () => console.log("Abort!"),
-      trace: (msg: any, nb: number, value: number) => logRef.log(msg, value)
-    }
+      trace: (msg: any, nb: number, value: number) => logRef.log(msg, value),
+    },
   };
 
   const myModule = await loader.instantiate(
-    fetch("untouched.wasm"),
+    fetch("optimized.wasm"),
     importObject
   );
   logRef.log = (msg: any, value: number) =>
@@ -33,8 +33,8 @@ const initWasmOld = async () => {
     env: {
       memory,
       abort: () => console.log("Abort!"),
-      trace: (msg: any, nb: number, value: number) => console.log(msg, value)
-    }
+      trace: (msg: any, nb: number, value: number) => console.log(msg, value),
+    },
   };
   //const wasmResponse = await fetch("optimized.wasm");
   const wasmResponse = await fetch("optimized.wasm");
@@ -44,9 +44,9 @@ const initWasmOld = async () => {
 };
 
 const loadImage = (file: any): Promise<ImageData> =>
-  new Promise(resolve => {
+  new Promise((resolve) => {
     const reader = new FileReader();
-    reader.onload = event => {
+    reader.onload = (event) => {
       const newimage = new Image();
       newimage.src = (event.currentTarget as any).result;
       newimage.onload = () => {
@@ -126,7 +126,7 @@ const displayResultImage100 = (
 };
 
 const run = async () => {
-  await new Promise(resolve => window.addEventListener("load", resolve));
+  await new Promise((resolve) => window.addEventListener("load", resolve));
 
   const wasm = (await initWasm()) as any;
 
@@ -136,7 +136,7 @@ const run = async () => {
 
   document
     .getElementById("originalFile")
-    .addEventListener("change", async evt => {
+    .addEventListener("change", async (evt) => {
       const files = (evt.target as any).files;
 
       let imageData = await loadImage(files[0]);
