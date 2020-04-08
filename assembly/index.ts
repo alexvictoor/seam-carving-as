@@ -12,15 +12,6 @@ export function coucou(): i32 {
   toto.fill(123);
   toto[3601] = 421;
   trace("log depuis as", 1, 123);
-  /*const s = i8x16.sub(
-    i8x16(1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4),
-    i8x16(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
-  );
-  store<u8>(0, 12);
-  const vector: v128 = v128.load(0);
-  trace("simd", 1, v128.extract_lane<u8>(vector, 0));
-  trace("log simd", 1, i8x16.extract_lane_u(s, 0));
-  trace("log simd", 1, i8x16.extract_lane_u(s, 15));*/
   return toto[3601];
 }
 
@@ -88,7 +79,11 @@ class Picture {
   westColor: Color;
   eastColor: Color;
 
-  constructor(public data: Uint8Array, public width: u32, public height: u32) {
+  constructor(
+    public data: Uint8Array,
+    public width: usize,
+    public height: usize
+  ) {
     this.northColor = new Color(data, 0);
     this.southColor = new Color(data, 0);
     this.westColor = new Color(data, 0);
@@ -96,11 +91,11 @@ class Picture {
   }
 
   @inline
-  toPtr(x: u32, y: u32): usize {
+  toPtr(x: usize, y: usize): usize {
     return (x + y * this.width) << 2;
   }
 
-  getColorAt(x: u32, y: u32): Color {
+  getColorAt(x: usize, y: usize): Color {
     if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
       return WHITE;
     }
@@ -108,16 +103,12 @@ class Picture {
   }
 
   @inline
-  isOut(x: u32, y: u32): bool {
+  isOut(x: usize, y: usize): bool {
     return x < 0 || x >= this.width || y < 0 || y >= this.height;
   }
 
   @inline
-  energyAtOptimized(x: u32, y: u32): u32 {
-    /*if (x < 0 || x >= this.width || y < 0 || y > this.height) {
-      throw new Error("out of range");
-    }*/
-
+  energyAt(x: usize, y: usize): u32 {
     const northColor = this.isOut(x, y - 1)
       ? WHITE
       : this.northColor.move(this.toPtr(x, y - 1));
@@ -133,54 +124,6 @@ class Picture {
 
     return delta(northColor, southColor) + delta(eastColor, westColor);
   }
-
-  /*@inline
-  energyAtOptimizedSIMD(x: u32, y: u32): u32 {
-    const northColor = this.isOut(x, y - 1)
-      ? WHITE
-      : this.northColor.move(this.toPtr(x, y - 1));
-    const southColor = this.isOut(x, y + 1)
-      ? WHITE
-      : this.southColor.move(this.toPtr(x, y + 1));
-    const westColor = this.isOut(x - 1, y)
-      ? WHITE
-      : this.westColor.move(this.toPtr(x - 1, y));
-    const eastColor = this.isOut(x + 1, y)
-      ? WHITE
-      : this.eastColor.move(this.toPtr(x + 1, y));
-
-    const nRed = northColor.red;
-    const northEastColors = i16x8(
-      nRed,
-      northColor.green,
-      northColor.blue,
-      eastColor.red,
-      eastColor.green,
-      eastColor.blue,
-      0,
-      0
-    );
-    const southWestColors = i16x8(
-      southColor.red,
-      southColor.green,
-      southColor.blue,
-      westColor.red,
-      westColor.green,
-      westColor.blue,
-      0,
-      0
-    );
-    const delta = i16x8.sub(northEastColors, southWestColors);
-    const deltaSquare = i16x8.mul(delta, delta);
-    return (
-      i16x8.extract_lane_u(deltaSquare, 0) +
-      i16x8.extract_lane_u(deltaSquare, 1) +
-      i16x8.extract_lane_u(deltaSquare, 2) +
-      i16x8.extract_lane_u(deltaSquare, 3) +
-      i16x8.extract_lane_u(deltaSquare, 4) +
-      i16x8.extract_lane_u(deltaSquare, 5)
-    );
-  }*/
 }
 
 class Seam {
@@ -193,7 +136,7 @@ class Seam {
   evenLineWeights: Uint32Array;
   seam: usize[];
 
-  public static create(data: Uint8Array, width: u32): Seam {
+  public static create(data: Uint8Array, width: usize): Seam {
     if (Seam.instance) {
       Seam.instance.init(data, width);
     } else {
@@ -202,11 +145,11 @@ class Seam {
     return Seam.instance;
   }
 
-  constructor(private data: Uint8Array, private width: u32) {
+  constructor(private data: Uint8Array, private width: usize) {
     this.init(data, width);
   }
 
-  private init(data: Uint8Array, width: u32): void {
+  private init(data: Uint8Array, width: usize): void {
     this.picture = new Picture(data, width, data.length / (width * 4));
     this.initEnergies();
   }
@@ -220,55 +163,18 @@ class Seam {
       this.evenLineWeights = new Uint32Array(this.width);
     }
 
-    for (let y: u32 = 0, w = 0; y < this.picture.height; y++) {
-      for (let x: u32 = 0; x < this.picture.width; x++, w++) {
-        energies[w] = this.picture.energyAtOptimized(x, y);
+    for (let y: usize = 0, w = 0; y < this.picture.height; y++) {
+      for (let x: usize = 0; x < this.picture.width; x++, w++) {
+        energies[w] = this.picture.energyAt(x, y);
       }
     }
-
-    /*else {
-      for (let y: u32 = 0; y < this.picture.height; y++) {
-        const yWidth = y * this.width;
-        if (this.seam[y] > 1) {
-          energies.copyWithin(
-            yWidth,
-            yWidth + this.width,
-            yWidth + this.width + this.seam[y] - 1
-          );
-        }
-        energies[
-          yWidth + this.width + this.seam[y] - 1
-        ] = this.picture.energyAtOptimized(this.seam[y] - 1, y);
-        energies[
-          yWidth + this.width + this.seam[y]
-        ] = this.picture.energyAtOptimized(this.seam[y], y);
-
-        if (y > 0) {
-          if (this.seam[y] > 0) {
-            energies[
-              yWidth - this.width + this.seam[y] - 1
-            ] = this.picture.energyAtOptimized(this.seam[y] - 1, y - 1);
-          }
-          energies[
-            yWidth - this.width + this.seam[y]
-          ] = this.picture.energyAtOptimized(this.seam[y], y - 1);
-        }
-
-        energies.copyWithin(
-          yWidth + this.seam[y],
-          yWidth + this.width + this.seam[y] + 1,
-          yWidth + y + this.width + 1
-        );
-      }
-    }*/
 
     this.energies = energies;
   }
 
-  private weightFrom(line: Uint32Array, x: u32): u32 {
+  @inline
+  private weightFrom(line: Uint32Array, x: usize): u32 {
     if (x < 0 || x >= this.picture.width) {
-      //trace("getWeightAt out x", 1, x);
-      //trace("getWeightAt out y", 1, y);
       return u32.MAX_VALUE;
     }
     return line[x];
@@ -276,8 +182,8 @@ class Seam {
 
   @inline
   private cumulateWeights(
-    x: u32,
-    ptr: u32,
+    x: usize,
+    ptr: usize,
     currentLineWeights: Uint32Array,
     previousLineWeights: Uint32Array
   ): void {
@@ -305,15 +211,14 @@ class Seam {
     this.evenLineWeights.set(this.energies.subarray(0, this.picture.width));
     let previousLineWeights = this.evenLineWeights;
     let currentLineWeights = this.oddLineWeights;
-    for (let j: u32 = 1; j < this.picture.height; j++) {
-      for (let i: u32 = 0; i < this.picture.width; i++, weightIndex++) {
+    for (let j: usize = 1; j < this.picture.height; j++) {
+      for (let i: usize = 0; i < this.picture.width; i++, weightIndex++) {
         this.cumulateWeights(
           i,
           weightIndex,
           currentLineWeights,
           previousLineWeights
         );
-        //trace("weight updated", 1, this.weights[weightIndex]);
       }
       let swapTmp = currentLineWeights;
       currentLineWeights = previousLineWeights;
@@ -323,11 +228,9 @@ class Seam {
     // find index of last seam pixel
     let lastIndex = 0;
     let lastIndexWeight = u32.MAX_VALUE;
-    //trace("coucou", 1, 432);
-    for (let i: u32 = 0; i < this.picture.width; i++) {
+
+    for (let i: usize = 0; i < this.picture.width; i++) {
       let weight = currentLineWeights[i];
-      //trace("energy", 1, energy);
-      //trace("index", 1, i);
       if (weight < lastIndexWeight) {
         lastIndex = i;
         lastIndexWeight = weight;
@@ -336,7 +239,7 @@ class Seam {
 
     const seam = new Array<usize>(this.picture.height);
     seam[this.picture.height - 1] = lastIndex;
-    for (let i: u32 = this.picture.height - 2; i + 1 > 0; i--) {
+    for (let i: usize = this.picture.height - 2; i + 1 > 0; i--) {
       seam[i] =
         seam[i + 1] +
         this.backPtrWeights[seam[i + 1] + (i + 1) * this.picture.width];
@@ -352,45 +255,24 @@ class Seam {
     this.seam = seam;
     const newWidth = this.picture.width - 1;
     const oldWidth = this.picture.width;
-    const result = this.picture.data; //new Uint8Array(newWidth * this.picture.height * 4);
+    const result = this.picture.data;
 
     let oldPtr: usize = 0;
     const oldPtrStep: usize = oldWidth * 4;
     let newPtr: usize = 0;
     const newPtrStep: usize = newWidth * 4;
     for (
-      let y: u32 = 0;
+      let y: usize = 0;
       y < this.picture.height;
       y++, oldPtr = oldPtr + oldPtrStep, newPtr = newPtr + newPtrStep
     ) {
-      //trace("result.length", 1, result.length);
-      //trace("result.length", 1, result.byteLength);
-      //trace("copyWithin", 1, y * newWidth * 4);
-      //trace("copyWithi2", 1, y * this.width * 4);
-      //trace("copyWithi2", 1, seam[y]);
-      //trace("copyWithi3", 1, (y * this.width + seam[y]) * 4);
-      /*if (seam[y] < 0) {
-        trace("error seam", 1, seam[y]);
-        trace("error seam", 1, y);
-        trace("newWidth", 1, newWidth);
-        trace("original", 1, result.length / this.picture.height);
-      }*/
       result.copyWithin(newPtr, oldPtr, oldPtr + (seam[y] << 2));
-      /*result.set(
-        this.data.subarray(y * this.width * 4, (y * this.width + seam[y]) * 4),
-        y * newWidth * 4
-      );*/
 
       result.copyWithin(
         newPtr + (seam[y] << 2),
         oldPtr + ((seam[y] + 1) << 2),
         oldPtr + oldPtrStep
       );
-      /*const rightSide = this.data.subarray(
-        (y * this.width + seam[y] + 1) * 4,
-        (y + 1) * this.width * 4
-      );
-      result.set(rightSide, (y * newWidth + seam[y]) * 4);*/
     }
     return result;
   }
