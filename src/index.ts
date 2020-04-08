@@ -26,23 +26,6 @@ const initWasm = async () => {
   return myModule;
 };
 
-const initWasmOld = async () => {
-  const initial = 1;
-  const memory = new WebAssembly.Memory({ initial });
-  const importObject = {
-    env: {
-      memory,
-      abort: () => console.log("Abort!"),
-      trace: (msg: any, nb: number, value: number) => console.log(msg, value),
-    },
-  };
-  //const wasmResponse = await fetch("optimized.wasm");
-  const wasmResponse = await fetch("optimized.wasm");
-  const wasmBuffer = await wasmResponse.arrayBuffer();
-  const wasmInstance = await WebAssembly.instantiate(wasmBuffer, importObject);
-  return { wasm: wasmInstance.instance.exports as any, memory };
-};
-
 const loadImage = (file: any): Promise<ImageData> =>
   new Promise((resolve) => {
     const reader = new FileReader();
@@ -66,24 +49,6 @@ const loadImage = (file: any): Promise<ImageData> =>
   });
 
 const displayResultImage = (
-  imageData: ImageData,
-  wasmMemoryArray: Uint8Array,
-  originalImageByteSize: number
-) => {
-  const resultCanvas: HTMLCanvasElement = document.getElementById(
-    "canvas"
-  ) as any;
-  resultCanvas.width = imageData.width;
-  resultCanvas.height = imageData.height;
-  const resultCtx = resultCanvas.getContext("2d");
-  const resultImageData = resultCtx.createImageData(imageData);
-  resultImageData.data.set(
-    wasmMemoryArray.subarray(originalImageByteSize, originalImageByteSize * 2)
-  );
-  resultCtx.putImageData(resultImageData, 0, 0);
-};
-
-const displayResultImage2 = (
   imageData: ImageData,
   wasmMemoryArray: Uint8Array
 ) => {
@@ -140,12 +105,11 @@ const run = async () => {
       const files = (evt.target as any).files;
 
       let imageData = await loadImage(files[0]);
-      // https://stackoverflow.com/questions/60255133/whats-the-correct-way-to-share-memory-between-my-assemblyscript-module-and-my-j
-      //memory.grow(imageData.data.length / 64000 * 1.5)
-      //const mem = new Uint8Array(memory.buffer);
-      //mem.set(imageData.data);
-      console.log("--------");
-      console.log("coucou", wasm.coucou());
+
+      //console.log("--------");
+      //console.log("coucou", wasm.coucou());
+
+      const originalWidth = imageData.width;
 
       const ptrArr = wasm.__retain(
         wasm.__allocArray(wasm.UINT8ARRAY_ID, imageData.data)
@@ -156,18 +120,38 @@ const run = async () => {
       //console.log({ resultArray });
       //resultArray.fill(42);
       //imageData.data.fill(0);
-      imageData = displayResultImage2(imageData, resultArray);
+      imageData = displayResultImage(imageData, resultArray);
       wasm.__release(ptrArr);
       wasm.__release(resultPtr);
       //wasm.shrinkWidth(byteSize, imageData.width);
-      const start = Date.now();
+
+      const animationState = {
+        frame: 0,
+      };
+      const shrink = (n: number) => {
+        const shrinkOneSeam = () => {
+          const resultPtr = wasm.shrink();
+          const resultArray = wasm.__getUint8Array(resultPtr);
+          imageData = displayResultImage(imageData, resultArray);
+          wasm.__release(resultPtr);
+          animationState.frame = animationState.frame + 1;
+          if (animationState.frame < n) {
+            requestAnimationFrame(shrinkOneSeam);
+          }
+        };
+        requestAnimationFrame(shrinkOneSeam);
+      };
+
+      shrink(originalWidth / 2);
+
+      /*const start = Date.now();
       for (let i = 0; i < 2; i++) {
         const resultPtr = wasm.shrink100();
         const resultArray = wasm.__getUint8Array(resultPtr);
         imageData = displayResultImage100(imageData, resultArray);
         wasm.__release(resultPtr);
       }
-      console.log((Date.now() - start) / 200);
+      console.log((Date.now() - start) / 200);*/
     });
 };
 run();
