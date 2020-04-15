@@ -3,7 +3,7 @@
     "asbuild:untouched": "asc assembly/index.ts -b build/untouched.wasm -t build/untouched.wat --sourceMap --validate --debug --runtime full --importMemory --enable simd",
     "asbuild:optimized": "asc assembly/index.ts -b build/optimized.wasm -t build/optimized.wat --sourceMap --validate -O3 --runtime stub --importMemory --enable simd",
     "asbuild": "npm run asbuild:untouched && npm run asbuild:optimized",
-    "dev": "yarn asbuild && cp build/*.map dist/ && cp build/*.wasm dist/ && parcel src/index.html",
+    "dev": "yarn asbuild && cp build/*.map dist/ && cp build/*.wasm dist/ && cp src/*.jpg dist/ && parcel src/index.html",
     "devx": "parcel src/index.html"
   },
   "devDependencies": {
