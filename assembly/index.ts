@@ -65,12 +65,14 @@ whiteData[2] = 255;
 const WHITE = new Color(whiteData, 0);
 
 @inline
-function delta(first: Color, second: Color): u32 {
-  const deltaRed = first.red - second.red;
-  const deltaGreen = first.green - second.green;
-  const deltaBlue = first.blue - second.blue;
+function delta(first: Color, second: Color): f32 {
+  const deltaRed = <f32>first.red - <f32>second.red;
+  const deltaGreen = <f32>first.green - <f32>second.green;
+  const deltaBlue = <f32>first.blue - <f32>second.blue;
 
-  return deltaBlue * deltaBlue + deltaGreen * deltaGreen + deltaRed * deltaRed;
+  return sqrt(
+    deltaBlue * deltaBlue + deltaGreen * deltaGreen + deltaRed * deltaRed
+  );
 }
 
 class Picture {
@@ -108,7 +110,7 @@ class Picture {
   }
 
   @inline
-  energyAt(x: usize, y: usize): u32 {
+  energyAt(x: usize, y: usize): f32 {
     const northColor = this.isOut(x, y - 1)
       ? WHITE
       : this.northColor.move(this.toPtr(x, y - 1));
@@ -130,10 +132,10 @@ class Seam {
   static instance: Seam;
 
   picture: Picture;
-  energies: Uint32Array;
+  energies: Float32Array;
   backPtrWeights: Int8Array;
-  oddLineWeights: Uint32Array;
-  evenLineWeights: Uint32Array;
+  oddLineWeights: Float32Array;
+  evenLineWeights: Float32Array;
   seam: usize[];
 
   public static create(data: Uint8Array, width: usize): Seam {
@@ -155,12 +157,12 @@ class Seam {
   }
 
   private initEnergies(): void {
-    let energies: Uint32Array = this.energies;
+    let energies: Float32Array = this.energies;
     if (!this.energies || this.energies.length < this.data.length >> 2) {
-      energies = new Uint32Array(this.data.length >> 2);
+      energies = new Float32Array(this.data.length >> 2);
       this.backPtrWeights = new Int8Array(this.data.length >> 2);
-      this.oddLineWeights = new Uint32Array(this.width);
-      this.evenLineWeights = new Uint32Array(this.width);
+      this.oddLineWeights = new Float32Array(this.width);
+      this.evenLineWeights = new Float32Array(this.width);
     }
 
     for (let y: usize = 0, w = 0; y < this.picture.height; y++) {
@@ -173,9 +175,9 @@ class Seam {
   }
 
   @inline
-  private weightFrom(line: Uint32Array, x: usize): u32 {
+  private weightFrom(line: Float32Array, x: usize): f32 {
     if (x < 0 || x >= this.picture.width) {
-      return u32.MAX_VALUE;
+      return f32.MAX_VALUE;
     }
     return line[x];
   }
@@ -184,8 +186,8 @@ class Seam {
   private cumulateWeights(
     x: usize,
     ptr: usize,
-    currentLineWeights: Uint32Array,
-    previousLineWeights: Uint32Array
+    currentLineWeights: Float32Array,
+    previousLineWeights: Float32Array
   ): void {
     let weight = this.weightFrom(previousLineWeights, x);
     let aboveXDelta: i8 = 0;
@@ -227,7 +229,7 @@ class Seam {
 
     // find index of last seam pixel
     let lastIndex = 0;
-    let lastIndexWeight = u32.MAX_VALUE;
+    let lastIndexWeight = f32.MAX_VALUE;
 
     for (let i: usize = 0; i < this.picture.width; i++) {
       let weight = currentLineWeights[i];
