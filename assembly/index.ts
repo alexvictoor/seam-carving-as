@@ -4,8 +4,6 @@ export const FLOAT64ARRAY_ID = idof<Float64Array>();
 export const UINT32ARRAY_ID = idof<Uint32Array>();
 export const UINT8ARRAY_ID = idof<Uint8Array>();
 
-NativeMath.seedRandom(42);
-
 export function coucou(): i32 {
   //memory.memory.grow(10);
   const toto = new Array<usize>(16);

@@ -121,10 +121,10 @@ const run = async () => {
   fetch("surfer-web.jpg")
     .then((response) => response.arrayBuffer())
     .then((buffer) => {
-      var arrayBufferView = new Uint8Array(buffer);
-      var blob = new Blob([arrayBufferView], { type: "image/jpeg" });
-      var urlCreator = window.URL || window.webkitURL;
-      var imageUrl = urlCreator.createObjectURL(blob);
+      const arrayBufferView = new Uint8Array(buffer);
+      const blob = new Blob([arrayBufferView], { type: "image/jpeg" });
+      const urlCreator = window.URL || window.webkitURL;
+      const imageUrl = urlCreator.createObjectURL(blob);
       return dataUrl2ImageData(imageUrl);
     })
     .then((imageData) => shrinkByHalf(imageData, wasm));
