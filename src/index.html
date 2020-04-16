@@ -3,14 +3,27 @@
 <head>
     <link rel="stylesheet" href="https://andybrewer.github.io/mvp/mvp.css">
     <script src="./index.ts"></script>
+    <style>
+        footer,
+        header,
+        main {
+            padding: 1rem;
+        }
+    </style>
 </head>
 
 <body>
     <header>
-        <h1>Seam Carving in AssemblyScript</h1>
+        <h2>Seam Carving in AssemblyScript</h2>
     </header>
 
     <main>
+        <section>
+            <figure>
+                <canvas id="canvas"></canvas>
+                <figcaption><i id="canvasCaption">Image caption</i></figcaption>
+            </figure>
+        </section>
         <section>
             <form>
                 <label for="originalFile">Choose another image file</label>
@@ -18,21 +31,14 @@
 
             </form>
         </section>
-        <article>
-            <figure>
-                <canvas id="canvas"></canvas>
-                <figcaption><i>Image caption</i></figcaption>
-            </figure>
-        </article>
-
     </main>
     <footer>
-        <hr>
+        <p>
+            Take a look at the code on <a href="https://github.com/alexvictoor/seam-carving-as">Github</a></p>
         <p>
             If you are an AssemblyScript expert, feedback welcome!
         </p>
-        <p>
-            Take a look at the code on <a href="https://github.com/alexvictoor/seam-carving-as">Github</a></p>
+
     </footer>
 </body>
 

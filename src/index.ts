@@ -26,27 +26,30 @@ const initWasm = async () => {
   return myModule;
 };
 
+const dataUrl2ImageData = (url: string): Promise<ImageData> =>
+  new Promise((resolve) => {
+    const newimage = new Image();
+    newimage.src = url;
+    newimage.onload = () => {
+      const canvas = new OffscreenCanvas(newimage.width, newimage.height);
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(newimage, 0, 0);
+      const imageData = ctx.getImageData(0, 0, newimage.width, newimage.height);
+      resolve(imageData);
+    };
+  });
+
 const loadImage = (file: any): Promise<ImageData> =>
   new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = (event) => {
-      const newimage = new Image();
-      newimage.src = (event.currentTarget as any).result;
-      newimage.onload = () => {
-        const canvas = new OffscreenCanvas(newimage.width, newimage.height);
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(newimage, 0, 0);
-        const imageData = ctx.getImageData(
-          0,
-          0,
-          newimage.width,
-          newimage.height
-        );
-        resolve(imageData);
-      };
+      const imageData = dataUrl2ImageData((event.currentTarget as any).result);
+      resolve(imageData);
     };
     reader.readAsDataURL(file);
   });
+
+let nextFrame: number | void = undefined;
 
 const displayResultImage = (
   imageData: ImageData,
@@ -70,6 +73,10 @@ const displayResultImage = (
 };
 
 const shrinkByHalf = (imageData: ImageData, wasm: any) => {
+  if (nextFrame) {
+    cancelAnimationFrame(nextFrame);
+  }
+
   const originalWidth = imageData.width;
 
   const ptrArr = wasm.__retain(
@@ -91,11 +98,14 @@ const shrinkByHalf = (imageData: ImageData, wasm: any) => {
       imageData = displayResultImage(imageData, resultArray);
       wasm.__release(resultPtr);
       animationState.frame = animationState.frame + 1;
+      document.getElementById(
+        "canvasCaption"
+      ).innerHTML = `Width reduced by ${animationState.frame}px`;
       if (animationState.frame < n) {
-        requestAnimationFrame(shrinkOneSeam);
+        nextFrame = requestAnimationFrame(shrinkOneSeam);
       }
     };
-    requestAnimationFrame(shrinkOneSeam);
+    nextFrame = requestAnimationFrame(shrinkOneSeam);
   };
 
   shrink(originalWidth / 2);
@@ -107,6 +117,17 @@ const run = async () => {
   const wasm = (await initWasm()) as any;
 
   console.log("coucou", wasm.coucou());
+
+  fetch("surfer-web.jpg")
+    .then((response) => response.arrayBuffer())
+    .then((buffer) => {
+      var arrayBufferView = new Uint8Array(buffer);
+      var blob = new Blob([arrayBufferView], { type: "image/jpeg" });
+      var urlCreator = window.URL || window.webkitURL;
+      var imageUrl = urlCreator.createObjectURL(blob);
+      return dataUrl2ImageData(imageUrl);
+    })
+    .then((imageData) => shrinkByHalf(imageData, wasm));
 
   document
     .getElementById("originalFile")

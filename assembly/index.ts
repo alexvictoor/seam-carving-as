@@ -21,11 +21,12 @@ let currentWidth: u32;
 export function shrinkWidth(srcImage: Uint8Array, width: u32): Uint8Array {
   currentImageData = srcImage;
   currentWidth = width;
+  Seam.create(currentImageData, currentWidth);
   return shrink();
 }
 
 export function shrink(): Uint8Array {
-  const seam = Seam.create(currentImageData, currentWidth);
+  const seam = Seam.recycle(currentImageData, currentWidth);
   currentImageData = seam.shrinkWidth();
   currentWidth--;
   return currentImageData;
@@ -139,11 +140,12 @@ class Seam {
   seam: usize[];
 
   public static create(data: Uint8Array, width: usize): Seam {
-    if (Seam.instance) {
-      Seam.instance.init(data, width);
-    } else {
-      Seam.instance = new Seam(data, width);
-    }
+    Seam.instance = new Seam(data, width);
+    return Seam.instance;
+  }
+
+  public static recycle(data: Uint8Array, width: usize): Seam {
+    Seam.instance.init(data, width);
     return Seam.instance;
   }
 
