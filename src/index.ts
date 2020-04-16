@@ -69,25 +69,36 @@ const displayResultImage = (
   return resultImageData;
 };
 
-const displayResultImage100 = (
-  imageData: ImageData,
-  wasmMemoryArray: Uint8Array
-) => {
-  const resultCanvas: HTMLCanvasElement = document.getElementById(
-    "canvas"
-  ) as any;
-  resultCanvas.width = imageData.width - 100;
-  resultCanvas.height = imageData.height;
-  const resultCtx = resultCanvas.getContext("2d");
-  const resultImageData = resultCtx.createImageData(
-    resultCanvas.width,
-    resultCanvas.height
+const shrinkByHalf = (imageData: ImageData, wasm: any) => {
+  const originalWidth = imageData.width;
+
+  const ptrArr = wasm.__retain(
+    wasm.__allocArray(wasm.UINT8ARRAY_ID, imageData.data)
   );
-  resultImageData.data.set(
-    wasmMemoryArray.subarray(0, resultCanvas.width * resultCanvas.height * 4)
-  );
-  resultCtx.putImageData(resultImageData, 0, 0);
-  return resultImageData;
+  const resultPtr = wasm.shrinkWidth(ptrArr, imageData.width);
+  const resultArray = wasm.__getUint8Array(resultPtr);
+  imageData = displayResultImage(imageData, resultArray);
+  wasm.__release(ptrArr);
+  wasm.__release(resultPtr);
+
+  const animationState = {
+    frame: 0,
+  };
+  const shrink = (n: number) => {
+    const shrinkOneSeam = () => {
+      const resultPtr = wasm.shrink();
+      const resultArray = wasm.__getUint8Array(resultPtr);
+      imageData = displayResultImage(imageData, resultArray);
+      wasm.__release(resultPtr);
+      animationState.frame = animationState.frame + 1;
+      if (animationState.frame < n) {
+        requestAnimationFrame(shrinkOneSeam);
+      }
+    };
+    requestAnimationFrame(shrinkOneSeam);
+  };
+
+  shrink(originalWidth / 2);
 };
 
 const run = async () => {
@@ -96,8 +107,6 @@ const run = async () => {
   const wasm = (await initWasm()) as any;
 
   console.log("coucou", wasm.coucou());
-  //var ptrArr = wasm.__retain(wasm.__allocArray(wasm.UINT32ARRAY_ID, [1, 2, 0]));
-  //console.log({ ptrArr });
 
   document
     .getElementById("originalFile")
@@ -105,53 +114,7 @@ const run = async () => {
       const files = (evt.target as any).files;
 
       let imageData = await loadImage(files[0]);
-
-      //console.log("--------");
-      //console.log("coucou", wasm.coucou());
-
-      const originalWidth = imageData.width;
-
-      const ptrArr = wasm.__retain(
-        wasm.__allocArray(wasm.UINT8ARRAY_ID, imageData.data)
-      );
-      //console.log({ ptrArr, width: imageData.width });
-      const resultPtr = wasm.shrinkWidth(ptrArr, imageData.width);
-      const resultArray = wasm.__getUint8Array(resultPtr);
-      //console.log({ resultArray });
-      //resultArray.fill(42);
-      //imageData.data.fill(0);
-      imageData = displayResultImage(imageData, resultArray);
-      wasm.__release(ptrArr);
-      wasm.__release(resultPtr);
-      //wasm.shrinkWidth(byteSize, imageData.width);
-
-      const animationState = {
-        frame: 0,
-      };
-      const shrink = (n: number) => {
-        const shrinkOneSeam = () => {
-          const resultPtr = wasm.shrink();
-          const resultArray = wasm.__getUint8Array(resultPtr);
-          imageData = displayResultImage(imageData, resultArray);
-          wasm.__release(resultPtr);
-          animationState.frame = animationState.frame + 1;
-          if (animationState.frame < n) {
-            requestAnimationFrame(shrinkOneSeam);
-          }
-        };
-        requestAnimationFrame(shrinkOneSeam);
-      };
-
-      shrink(originalWidth / 2);
-
-      /*const start = Date.now();
-      for (let i = 0; i < 2; i++) {
-        const resultPtr = wasm.shrink100();
-        const resultArray = wasm.__getUint8Array(resultPtr);
-        imageData = displayResultImage100(imageData, resultArray);
-        wasm.__release(resultPtr);
-      }
-      console.log((Date.now() - start) / 200);*/
+      shrinkByHalf(imageData, wasm);
     });
 };
 run();
