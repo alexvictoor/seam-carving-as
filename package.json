@@ -4,7 +4,7 @@
     "asbuild:optimized": "asc assembly/index.ts -b build/optimized.wasm -t build/optimized.wat --sourceMap --validate -O3 --runtime stub --importMemory --enable simd",
     "asbuild": "npm run asbuild:untouched && npm run asbuild:optimized",
     "dev": "yarn asbuild && cp build/*.map dist/ && cp build/*.wasm dist/ && cp src/*.jpg dist/ && parcel src/index.html",
-    "devx": "parcel src/index.html"
+    "deploy": "parcel build  --public-url ./ src/index.html && git add dist && git commit -m \"auto deploy\" && git subtree push --prefix dist origin gh-pages"
   },
   "devDependencies": {
     "assemblyscript": "^0.9.4",
