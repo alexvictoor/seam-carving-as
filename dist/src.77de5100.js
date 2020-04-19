@@ -697,6 +697,7 @@ var loader_1 = __importDefault(require("@assemblyscript/loader")); //
 // https://gist.github.com/n1ru4l/9c7eff52fe084d67ff15ae6b0af5f171
 //
 
+<<<<<<< HEAD
 
 if (!window.OffscreenCanvas) {
   window.OffscreenCanvas =
@@ -715,6 +716,26 @@ if (!window.OffscreenCanvas) {
         });
       };
 
+=======
+
+if (!window.OffscreenCanvas) {
+  window.OffscreenCanvas =
+  /** @class */
+  function () {
+    function OffscreenCanvas(width, height) {
+      var _this = this;
+
+      this.canvas = document.createElement("canvas");
+      this.canvas.width = width;
+      this.canvas.height = height;
+
+      this.canvas.convertToBlob = function () {
+        return new Promise(function (resolve) {
+          _this.canvas.toBlob(resolve);
+        });
+      };
+
+>>>>>>> auto deploy
       return this.canvas;
     }
 
@@ -929,7 +950,11 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+<<<<<<< HEAD
   var ws = new WebSocket(protocol + '://' + hostname + ':' + "59712" + '/');
+=======
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49456" + '/');
+>>>>>>> auto deploy
 
   ws.onmessage = function (event) {
     checkedAssets = {};
