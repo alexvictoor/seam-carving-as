@@ -72,7 +72,7 @@ const displayResultImage = (
   return resultImageData;
 };
 
-const shrinkByHalf = (imageData: ImageData, wasm: any) => {
+const shrinkByHalf = (imageData: ImageData, wasm: any, fwdEnergy: boolean) => {
   if (nextFrame) {
     cancelAnimationFrame(nextFrame);
   }
@@ -82,7 +82,9 @@ const shrinkByHalf = (imageData: ImageData, wasm: any) => {
   const ptrArr = wasm.__retain(
     wasm.__allocArray(wasm.UINT8ARRAY_ID, imageData.data)
   );
-  const resultPtr = wasm.shrinkWidth(ptrArr, imageData.width);
+  const resultPtr = fwdEnergy
+    ? wasm.shrinkWidthWithForwardEnergy(ptrArr, imageData.width)
+    : wasm.shrinkWidth(ptrArr, imageData.width);
   const resultArray = wasm.__getUint8Array(resultPtr);
   imageData = displayResultImage(imageData, resultArray);
   wasm.__release(ptrArr);
@@ -118,6 +120,9 @@ const run = async () => {
 
   console.log("coucou", wasm.coucou());
 
+  let imageData: ImageData = undefined;
+  let fwdEnergyFlag = false;
+
   fetch("surfer-web.jpg")
     .then((response) => response.arrayBuffer())
     .then((buffer) => {
@@ -127,15 +132,29 @@ const run = async () => {
       const imageUrl = urlCreator.createObjectURL(blob);
       return dataUrl2ImageData(imageUrl);
     })
-    .then((imageData) => shrinkByHalf(imageData, wasm));
+    .then((data) => {
+      imageData = data;
+      shrinkByHalf(imageData, wasm, fwdEnergyFlag);
+    });
 
   document
     .getElementById("originalFile")
     .addEventListener("change", async (evt) => {
       const files = (evt.target as any).files;
 
-      let imageData = await loadImage(files[0]);
-      shrinkByHalf(imageData, wasm);
+      imageData = await loadImage(files[0]);
+      shrinkByHalf(imageData, wasm, fwdEnergyFlag);
     });
+
+  document
+    .getElementById("algo-classic")
+    .addEventListener("click", async (evt) => {
+      fwdEnergyFlag = false;
+      shrinkByHalf(imageData, wasm, fwdEnergyFlag);
+    });
+  document.getElementById("algo-fwd").addEventListener("click", async (evt) => {
+    fwdEnergyFlag = true;
+    shrinkByHalf(imageData, wasm, fwdEnergyFlag);
+  });
 };
 run();
