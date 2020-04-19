@@ -781,7 +781,7 @@ var displayResultImage = function displayResultImage(imageData, wasmMemoryArray)
   return resultImageData;
 };
 
-var shrinkByHalf = function shrinkByHalf(imageData, wasm) {
+var shrinkByHalf = function shrinkByHalf(imageData, wasm, fwdEnergy) {
   if (nextFrame) {
     cancelAnimationFrame(nextFrame);
   }
@@ -790,7 +790,7 @@ var shrinkByHalf = function shrinkByHalf(imageData, wasm) {
 
   var ptrArr = wasm.__retain(wasm.__allocArray(wasm.UINT8ARRAY_ID, imageData.data));
 
-  var resultPtr = wasm.shrinkWidth(ptrArr, imageData.width);
+  var resultPtr = fwdEnergy ? wasm.shrinkWidthWithForwardEnergy(ptrArr, imageData.width) : wasm.shrinkWidth(ptrArr, imageData.width);
 
   var resultArray = wasm.__getUint8Array(resultPtr);
 
@@ -830,7 +830,7 @@ var shrinkByHalf = function shrinkByHalf(imageData, wasm) {
 
 var run = function run() {
   return __awaiter(void 0, void 0, void 0, function () {
-    var wasm;
+    var wasm, imageData, fwdEnergyFlag;
     return __generator(this, function (_a) {
       switch (_a.label) {
         case 0:
@@ -850,6 +850,8 @@ var run = function run() {
         case 2:
           wasm = _a.sent();
           console.log("coucou", wasm.coucou());
+          imageData = undefined;
+          fwdEnergyFlag = false;
           fetch("surfer-web.jpg").then(function (response) {
             return response.arrayBuffer();
           }).then(function (buffer) {
@@ -860,12 +862,13 @@ var run = function run() {
             var urlCreator = window.URL || window.webkitURL;
             var imageUrl = urlCreator.createObjectURL(blob);
             return dataUrl2ImageData(imageUrl);
-          }).then(function (imageData) {
-            return shrinkByHalf(imageData, wasm);
+          }).then(function (data) {
+            imageData = data;
+            shrinkByHalf(imageData, wasm, fwdEnergyFlag);
           });
           document.getElementById("originalFile").addEventListener("change", function (evt) {
             return __awaiter(void 0, void 0, void 0, function () {
-              var files, imageData;
+              var files;
               return __generator(this, function (_a) {
                 switch (_a.label) {
                   case 0:
@@ -876,11 +879,33 @@ var run = function run() {
 
                   case 1:
                     imageData = _a.sent();
-                    shrinkByHalf(imageData, wasm);
+                    shrinkByHalf(imageData, wasm, fwdEnergyFlag);
                     return [2
                     /*return*/
                     ];
                 }
+              });
+            });
+          });
+          document.getElementById("algo-classic").addEventListener("click", function (evt) {
+            return __awaiter(void 0, void 0, void 0, function () {
+              return __generator(this, function (_a) {
+                fwdEnergyFlag = false;
+                shrinkByHalf(imageData, wasm, fwdEnergyFlag);
+                return [2
+                /*return*/
+                ];
+              });
+            });
+          });
+          document.getElementById("algo-fwd").addEventListener("click", function (evt) {
+            return __awaiter(void 0, void 0, void 0, function () {
+              return __generator(this, function (_a) {
+                fwdEnergyFlag = true;
+                shrinkByHalf(imageData, wasm, fwdEnergyFlag);
+                return [2
+                /*return*/
+                ];
               });
             });
           });
@@ -921,7 +946,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61264" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61382" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
@@ -1098,4 +1123,4 @@ function hmrAcceptRun(bundle, id) {
   }
 }
 },{}]},{},["../node_modules/parcel/src/builtins/hmr-runtime.js","index.ts"], null)
-//# sourceMappingURL=src.77de5100.js.map
+//# sourceMappingURL=/src.77de5100.js.map
