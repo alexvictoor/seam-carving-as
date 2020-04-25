@@ -692,49 +692,49 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var loader_1 = __importDefault(require("@assemblyscript/loader"));
+var loader_1 = __importDefault(require("@assemblyscript/loader")); //
+// OffscreenCanvas polyfill
+// https://gist.github.com/n1ru4l/9c7eff52fe084d67ff15ae6b0af5f171
+//
 
-console.log(loader_1.default);
+
+if (!window.OffscreenCanvas) {
+  window.OffscreenCanvas =
+  /** @class */
+  function () {
+    function OffscreenCanvas(width, height) {
+      var _this = this;
+
+      this.canvas = document.createElement("canvas");
+      this.canvas.width = width;
+      this.canvas.height = height;
+
+      this.canvas.convertToBlob = function () {
+        return new Promise(function (resolve) {
+          _this.canvas.toBlob(resolve);
+        });
+      };
+
+      return this.canvas;
+    }
+
+    return OffscreenCanvas;
+  }();
+}
 
 var initWasm = function initWasm() {
   return __awaiter(void 0, void 0, void 0, function () {
-    var initial, memory, logRef, importObject, myModule;
     return __generator(this, function (_a) {
       switch (_a.label) {
         case 0:
-          initial = 1;
-          memory = new WebAssembly.Memory({
-            initial: initial
-          });
-          logRef = {
-            log: console.log
-          };
-          importObject = {
-            env: {
-              memory: memory,
-              abort: function abort() {
-                return console.log("Abort!");
-              },
-              trace: function trace(msg, nb, value) {
-                return logRef.log(msg, value);
-              }
-            }
-          };
           return [4
           /*yield*/
-          , loader_1.default.instantiate(fetch("optimized.wasm"), importObject)];
+          , loader_1.default.instantiate(fetch("optimized.wasm"))];
 
         case 1:
-          myModule = _a.sent();
-
-          logRef.log = function (msg, value) {
-            return console.log(myModule.__getString(msg), value);
-          };
-
-          console.log(myModule);
           return [2
           /*return*/
-          , myModule];
+          , _a.sent()];
       }
     });
   });
@@ -749,8 +749,7 @@ var dataUrl2ImageData = function dataUrl2ImageData(url) {
       var canvas = new OffscreenCanvas(newimage.width, newimage.height);
       var ctx = canvas.getContext("2d");
       ctx.drawImage(newimage, 0, 0);
-      var imageData = ctx.getImageData(0, 0, newimage.width, newimage.height);
-      resolve(imageData);
+      resolve(ctx.getImageData(0, 0, newimage.width, newimage.height));
     };
   });
 };
@@ -772,11 +771,13 @@ var nextFrame = undefined;
 
 var displayResultImage = function displayResultImage(imageData, wasmMemoryArray) {
   var resultCanvas = document.getElementById("canvas");
-  resultCanvas.width = imageData.width - 1;
-  resultCanvas.height = imageData.height;
+  var width = imageData.width - 1;
+  var height = imageData.height;
+  resultCanvas.width = width;
+  resultCanvas.height = height;
   var resultCtx = resultCanvas.getContext("2d");
-  var resultImageData = resultCtx.createImageData(resultCanvas.width, resultCanvas.height);
-  resultImageData.data.set(wasmMemoryArray.subarray(0, resultCanvas.width * resultCanvas.height * 4));
+  var resultImageData = resultCtx.createImageData(width, height);
+  resultImageData.data.set(wasmMemoryArray.subarray(0, width * height * 4));
   resultCtx.putImageData(resultImageData, 0, 0);
   return resultImageData;
 };
@@ -790,7 +791,7 @@ var shrinkByHalf = function shrinkByHalf(imageData, wasm, fwdEnergy) {
 
   var ptrArr = wasm.__retain(wasm.__allocArray(wasm.UINT8ARRAY_ID, imageData.data));
 
-  var resultPtr = fwdEnergy ? wasm.shrinkWidthWithForwardEnergy(ptrArr, imageData.width) : wasm.shrinkWidth(ptrArr, imageData.width);
+  var resultPtr = fwdEnergy ? wasm.shrinkWidthWithForwardEnergy(ptrArr, originalWidth) : wasm.shrinkWidth(ptrArr, originalWidth);
 
   var resultArray = wasm.__getUint8Array(resultPtr);
 
@@ -800,9 +801,8 @@ var shrinkByHalf = function shrinkByHalf(imageData, wasm, fwdEnergy) {
 
   wasm.__release(resultPtr);
 
-  var animationState = {
-    frame: 0
-  };
+  var frameDelta = 0;
+  var canvasCaption = document.getElementById("canvasCaption");
 
   var shrink = function shrink(n) {
     var shrinkOneSeam = function shrinkOneSeam() {
@@ -814,10 +814,9 @@ var shrinkByHalf = function shrinkByHalf(imageData, wasm, fwdEnergy) {
 
       wasm.__release(resultPtr);
 
-      animationState.frame = animationState.frame + 1;
-      document.getElementById("canvasCaption").innerHTML = "Width reduced by " + animationState.frame + "px";
+      canvasCaption.innerHTML = "Width reduced by " + frameDelta++ + "px";
 
-      if (animationState.frame < n) {
+      if (frameDelta < n) {
         nextFrame = requestAnimationFrame(shrinkOneSeam);
       }
     };
@@ -849,8 +848,6 @@ var run = function run() {
 
         case 2:
           wasm = _a.sent();
-          console.log("coucou", wasm.coucou());
-          imageData = undefined;
           fwdEnergyFlag = false;
           fetch("surfer-web.jpg").then(function (response) {
             return response.arrayBuffer();
@@ -887,27 +884,13 @@ var run = function run() {
               });
             });
           });
-          document.getElementById("algo-classic").addEventListener("click", function (evt) {
-            return __awaiter(void 0, void 0, void 0, function () {
-              return __generator(this, function (_a) {
-                fwdEnergyFlag = false;
-                shrinkByHalf(imageData, wasm, fwdEnergyFlag);
-                return [2
-                /*return*/
-                ];
-              });
-            });
+          document.getElementById("algo-classic").addEventListener("click", function () {
+            fwdEnergyFlag = false;
+            shrinkByHalf(imageData, wasm, fwdEnergyFlag);
           });
-          document.getElementById("algo-fwd").addEventListener("click", function (evt) {
-            return __awaiter(void 0, void 0, void 0, function () {
-              return __generator(this, function (_a) {
-                fwdEnergyFlag = true;
-                shrinkByHalf(imageData, wasm, fwdEnergyFlag);
-                return [2
-                /*return*/
-                ];
-              });
-            });
+          document.getElementById("algo-fwd").addEventListener("click", function () {
+            fwdEnergyFlag = true;
+            shrinkByHalf(imageData, wasm, fwdEnergyFlag);
           });
           return [2
           /*return*/
@@ -946,7 +929,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61382" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59712" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

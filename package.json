@@ -1,7 +1,7 @@
 {
   "scripts": {
-    "asbuild:untouched": "asc assembly/index.ts -b build/untouched.wasm -t build/untouched.wat --sourceMap --validate --debug --runtime full --importMemory --enable simd",
-    "asbuild:optimized": "asc assembly/index.ts -b build/optimized.wasm -t build/optimized.wat --sourceMap --validate -O3 --runtime stub --importMemory --enable simd",
+    "asbuild:untouched": "asc assembly/index.ts -b build/untouched.wasm -t build/untouched.wat --sourceMap --validate --debug",
+    "asbuild:optimized": "asc assembly/index.ts -b build/optimized.wasm -t build/optimized.wat --sourceMap --validate -O3 --noAssert",
     "asbuild": "npm run asbuild:untouched && npm run asbuild:optimized",
     "dev": "yarn asbuild && cp build/*.map dist/ && cp build/*.wasm dist/ && cp src/*.jpg dist/ && parcel src/index.html",
     "deploy": "parcel build  --public-url ./ src/index.html && git add dist && git commit -m \"auto deploy\" && git subtree push --prefix dist origin gh-pages"
@@ -12,7 +12,6 @@
     "typescript": "^3.7.5"
   },
   "dependencies": {
-    "@assemblyscript/loader": "^0.9.4",
-    "as-bind": "^0.2.0"
+    "@assemblyscript/loader": "^0.9.4"
   }
 }
