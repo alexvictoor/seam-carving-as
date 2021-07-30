@@ -1,6 +1,6 @@
 # Seam Carving with AssemblyScript
 
-[Live demo here!](https://alexvictoor.github.io/seam-carving-as)
+[Live demo here!](https://alexvictoor.github.io/seam-carving-as/index.as.html)
 
 This is a pet project used to learn AssemblyScript. The "assembly" directory contains the code that is compiled to webassembly. The "src" folder contains regular TypeScript code, hanfdling user interractions in the UI and calling the webassembly code when needed.
 

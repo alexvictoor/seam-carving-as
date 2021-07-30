@@ -66,29 +66,37 @@ const shrinkByHalf = (imageData: ImageData, wasm: any, fwdEnergy: boolean) => {
 
   const originalWidth = imageData.width;
 
-  const ptrArr = wasm.__retain(
-    wasm.__allocArray(wasm.UINT8ARRAY_ID, imageData.data)
+  const { __pin, __unpin, __newArray, __getArray, __getArrayView, __getUint8ArrayView, UINT8ARRAY_ID, shrinkWidthWithForwardEnergy, shrinkWidth } = wasm.exports
+
+  console.log(imageData.data)
+  console.log(UINT8ARRAY_ID);
+  const ptrArr = __pin(
+    __newArray(UINT8ARRAY_ID, imageData.data)
   );
+
   const resultPtr = fwdEnergy
-    ? wasm.shrinkWidthWithForwardEnergy(ptrArr, originalWidth)
-    : wasm.shrinkWidth(ptrArr, originalWidth);
-  const resultArray = wasm.__getUint8Array(resultPtr);
+    ? shrinkWidthWithForwardEnergy(ptrArr, originalWidth)
+    : shrinkWidth(ptrArr, originalWidth);
+  const resultArray = __getUint8ArrayView(resultPtr);
   imageData = displayResultImage(imageData, resultArray);
-  wasm.__release(ptrArr);
-  wasm.__release(resultPtr);
+  __unpin(ptrArr);
+  //__unpin(resultPtr);
 
   let frameDelta = 0;
   const canvasCaption = document.getElementById("canvasCaption");
+  const start = Date.now();
 
   const shrink = (n: number) => {
     const shrinkOneSeam = () => {
-      const resultPtr = wasm.shrink();
-      const resultArray = wasm.__getUint8Array(resultPtr);
+      const resultPtr = wasm.exports.shrink();
+      const resultArray = __getUint8ArrayView(resultPtr);
       imageData = displayResultImage(imageData, resultArray);
-      wasm.__release(resultPtr);
+      //__unpin(resultPtr);
       canvasCaption.innerHTML = `Width reduced by ${frameDelta++}px`;
       if (frameDelta < n) {
         nextFrame = requestAnimationFrame(shrinkOneSeam);
+      } else {
+        console.log((Date.now() - start) + 'ms')
       }
     };
     nextFrame = requestAnimationFrame(shrinkOneSeam);
@@ -101,6 +109,7 @@ const run = async () => {
   await new Promise((resolve) => window.addEventListener("load", resolve));
 
   const wasm = (await initWasm()) as any;
+  console.log(wasm)
 
   let imageData: ImageData;
   let fwdEnergyFlag = false;

@@ -1,0 +1,50 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://andybrewer.github.io/mvp/mvp.css">
+    <script src="./index.as.ts"></script>
+    <style>
+        footer,
+        header,
+        main {
+            padding: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h2>Seam Carving in AssemblyScript</h2>
+    </header>
+
+    <main>
+        <section>
+            <figure>
+                <canvas id="canvas"></canvas>
+                <figcaption><i id="canvasCaption">Image caption</i></figcaption>
+            </figure>
+        </section>
+        <section>
+            <form>
+                <label>Seam Carving Algorithm</label>
+                <input type="radio" id="algo-classic" name="algo" value="classic" checked>
+                <label for="algo-classic">Classic</label>
+                <input type="radio" id="algo-fwd" name="algo" value="fwd">
+                <label for="algo-fwd">With forward energy</label>
+                <label for="originalFile">Choose another image file</label>
+                <input type="file" id="originalFile" placeholder="Choose an image file" />
+
+            </form>
+        </section>
+    </main>
+    <footer>
+        <p>
+            Take a look at the code on <a href="https://github.com/alexvictoor/seam-carving-as">Github</a></p>
+        <p>
+            If you are an AssemblyScript expert, feedback welcome!
+        </p>
+
+    </footer>
+</body>
+
+</html>
