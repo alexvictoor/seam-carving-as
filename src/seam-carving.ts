@@ -66,9 +66,7 @@ function delta(first: Color, second: Color) {
   const deltaGreen = first.green - second.green;
   const deltaBlue = first.blue - second.blue;
 
-  return Math.sqrt(
-    deltaBlue * deltaBlue + deltaGreen * deltaGreen + deltaRed * deltaRed
-  );
+  return deltaBlue * deltaBlue + deltaGreen * deltaGreen + deltaRed * deltaRed;
 }
 
 class Picture {
