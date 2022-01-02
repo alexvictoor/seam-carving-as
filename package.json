@@ -1,19 +1,21 @@
 {
   "scripts": {
-    "asbuild:untouched": "asc assembly/index.ts -b build/untouched.wasm -t build/untouched.wat --sourceMap --debug",
-    "asbuild:optimized": "asc assembly/index.ts -b build/optimized.wasm -t build/optimized.wat -O3 --exportRuntime --noAssert",
+    "asbuild:untouched": "asc assembly/index.ts -b build/untouched.wasm -t build/untouched.wat --sourceMap --exportRuntime --debug --enable simd",
+    "asbuild:optimized": "asc assembly/index.ts -b build/optimized.wasm -t build/optimized.wat -O3 --exportRuntime --noAssert --enable simd",
     "asbuild": "npm run asbuild:untouched && npm run asbuild:optimized",
-    "dev-js": "yarn asbuild && cp build/*.map dist/ && cp build/*.wasm dist/ && cp src/*.jpg dist/ && parcel src/index.js.html",
-    "dev-as": "yarn asbuild && cp build/*.map dist/ && cp build/*.wasm dist/ && cp src/*.jpg dist/ && parcel src/index.as.html",
+    "astest": "asp --verbose",
+    "dev-js": "npm run asbuild && cp build/*.map dist/ && cp build/*.wasm dist/ && cp src/*.jpg dist/ && parcel src/index.js.html",
+    "dev-as": "npm run asbuild && cp build/*.map dist/ && cp build/*.wasm dist/ && cp src/*.jpg dist/ && parcel src/index.as.html",
     "deploy": "parcel build  --public-url ./ src/index.html && git add dist && git commit -m \"auto deploy\" && git subtree push --prefix dist origin gh-pages"
   },
   "devDependencies": {
-    "assemblyscript": "0.18.26",
+    "@as-pect/cli": "^6.2.4",
+    "assemblyscript": "^0.19.22",
     "parcel": "^1.12.4",
     "parcel-bundler": "^1.12.3",
     "typescript": "^3.7.5"
   },
   "dependencies": {
-    "@assemblyscript/loader": "0.18.26"
+    "@assemblyscript/loader": "^0.19.22"
   }
 }
