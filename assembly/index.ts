@@ -1,4 +1,5 @@
-import { computeEnergies, emptyPicture, Picture } from "./picture";
+import { computeEnergies, computeEnergiesWithSIMD, emptyPicture, Picture } from "./picture";
+import { SimdEngine } from "./simd-engine";
 
 export const FLOAT64ARRAY_ID = idof<Float64Array>();
 export const UINT32ARRAY_ID = idof<Uint32Array>();
@@ -7,11 +8,24 @@ export const UINT8ARRAY_ID = idof<Uint8Array>();
 let currentImageData: Uint8Array;
 let currentWidth: i32;
 
+
+export interface Engine {
+  init(data: Uint8Array, width: i32): void,
+  shrink(): Uint8Array
+}
+
+
+let engine: Engine = new SimdEngine();
+
 export function shrinkWidth(srcImage: Uint8Array, width: i32): Uint8Array {
-  currentImageData = srcImage;
+  /*currentImageData = srcImage;
   currentWidth = width;
   Seam.create(currentImageData, currentWidth);
-  return shrink();
+ 
+  engine.init(srcImage, width);
+  return shrink();*/
+  engine.init(srcImage, width);
+  return engine.shrink();
 }
 export function shrinkWidthWithForwardEnergy(
   srcImage: Uint8Array,
@@ -20,14 +34,17 @@ export function shrinkWidthWithForwardEnergy(
   currentImageData = srcImage;
   currentWidth = width;
   Seam.createWithForwardEnergy(currentImageData, currentWidth);
+
+  engine.init(srcImage, width);
   return shrink();
 }
 
 export function shrink(): Uint8Array {
-  let seam = Seam.recycle(currentImageData, currentWidth);
+  /*let seam = Seam.recycle(currentImageData, currentWidth);
   currentImageData = seam.shrinkWidth();
   currentWidth--;
-  return currentImageData;
+  return currentImageData;*/
+  return engine.shrink();
 }
 
 
@@ -92,8 +109,12 @@ class Seam {
         unchecked(energies[w] = picture.energyAt(x, y));
       }
     }*/
+    //trace('avant', 1, this.backPtrWeights.length);
 
-    this.energies = computeEnergies(picture.data, picture.width, energies);
+    //this.energies = computeEnergies(picture.data, picture.width, energies);
+    this.energies = computeEnergiesWithSIMD(picture.data, picture.width, energies);
+    //computeEnergiesWithSIMD(picture.data, picture.width, new StaticArray<i16>(size));
+    //trace('curieux', 1, this.backPtrWeights.length);
   }
 
   @inline
@@ -104,7 +125,7 @@ class Seam {
     return unchecked(line[x]);
   }
 
-  @inline
+  //@inline
   private cumulateWeights(
     x: i16,
     ptr: i32,
@@ -129,7 +150,9 @@ class Seam {
     }
 
     assert(<i16>x + aboveXDelta > -1);
-    unchecked(this.backPtrWeights[ptr] = aboveXDelta);
+    //trace("blabla", 2, ptr, this.backPtrWeights.length)
+    this.backPtrWeights[ptr] = aboveXDelta;
+    //trace("blabla 2")
     unchecked(currentLineWeights[x] = unchecked(this.energies[ptr]) + weight);
   }
 
