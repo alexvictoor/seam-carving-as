@@ -1,5 +1,7 @@
 import { computeEnergies, computeEnergiesWithSIMD, emptyPicture, Picture } from "./picture";
 import { SimdEngine } from "./simd-engine";
+import { SimdEngine as SimdEngine2 } from "./simd-engine2";
+import { RegularEngine } from "./regular-engine";
 
 export const FLOAT64ARRAY_ID = idof<Float64Array>();
 export const UINT32ARRAY_ID = idof<Uint32Array>();
@@ -15,7 +17,7 @@ export interface Engine {
 }
 
 
-let engine: Engine = new SimdEngine();
+let engine: Engine = new RegularEngine();
 
 export function shrinkWidth(srcImage: Uint8Array, width: i32): Uint8Array {
   /*currentImageData = srcImage;

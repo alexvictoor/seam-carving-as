@@ -1,7 +1,7 @@
 import { Engine } from ".";
 import { findVerticalSeam } from "./find-seam";
 import { removeSeam } from "./remove-seam";
-import { computeEnergiesWithSIMD } from "./simd-energy";
+import { initEnergyPicture, removeSeamRGB, computeEnergiesWithSIMD } from "./simd-energy2";
 
 export class SimdEngine implements Engine {
 
@@ -9,24 +9,21 @@ export class SimdEngine implements Engine {
   private imageWidth: i32 = 0;
   private imageHeight: i32 = 0;
 
-  private energies: StaticArray<i16> = new StaticArray<i16>(0);
-
   init(data: Uint8Array, width: i32): void {
     this.imageData = data;
     this.imageWidth = width;
     this.imageHeight = data.length / 4 / width;
+    initEnergyPicture(data, this.imageWidth, this.imageHeight);
   }
   shrink(): Uint8Array {
     const numberOfPixels = this.imageData.length >> 2;
 
-    if (this.energies.length < numberOfPixels) {
-      this.energies = new StaticArray<i16>(numberOfPixels + 8);
-    }
 
-    this.energies = computeEnergiesWithSIMD(this.imageData, this.imageWidth, this.imageHeight, this.energies);
+    const energies = computeEnergiesWithSIMD(this.imageWidth, this.imageHeight);
 
-    const seam = findVerticalSeam(this.energies, this.imageWidth, numberOfPixels);
+    const seam = findVerticalSeam(energies, this.imageWidth, numberOfPixels);
 
+    //log<string>("eng2 " + seam[0].toString());
 
     this.imageData = removeSeam(
       seam,
@@ -34,6 +31,10 @@ export class SimdEngine implements Engine {
       <i16>this.imageWidth,
       <i16>this.imageHeight
     );
+
+    removeSeamRGB(seam, <i16>this.imageWidth,
+      <i16>this.imageHeight);
+
     
     this.imageWidth--;
 

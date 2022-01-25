@@ -68,8 +68,6 @@ const shrinkByHalf = (imageData: ImageData, wasm: any, fwdEnergy: boolean) => {
 
   const { __pin, __unpin, __newArray, __getArray, __getArrayView, __getUint8ArrayView, UINT8ARRAY_ID, shrinkWidthWithForwardEnergy, shrinkWidth } = wasm.exports
 
-  console.log(imageData.data)
-  console.log(UINT8ARRAY_ID);
   const ptrArr = __pin(
     __newArray(UINT8ARRAY_ID, imageData.data)
   );

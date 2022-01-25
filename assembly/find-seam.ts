@@ -1,13 +1,13 @@
-let backPtrWeights: Int8Array = new Int8Array(0);
+let backPtrWeights: StaticArray<i8> = new StaticArray<i8>(0);
 
 export function findVerticalSeam(
   energies: StaticArray<i16>,
-  imageWidth: i32
+  imageWidth: i32,
+  numberOfPixels: i32
 ): StaticArray<i32> {
-  const numberOfPixels = energies.length;
   const imageHeight = numberOfPixels / imageWidth;
   if (backPtrWeights.length < numberOfPixels) {
-    backPtrWeights = new Int8Array(numberOfPixels);
+    backPtrWeights = new StaticArray<i8>(numberOfPixels);
   }
 
   let weightIndex = imageWidth;
@@ -70,6 +70,7 @@ export function findVerticalSeam(
   return seam;
 }
 
+@inline
 function cumulateWeights(
   x: i16,
   ptr: i32,

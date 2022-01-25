@@ -3,7 +3,7 @@ import { findVerticalSeam } from "./find-seam";
 import { removeSeam } from "./remove-seam";
 import { computeEnergiesWithSIMD } from "./simd-energy";
 
-export class SimdEngine implements Engine {
+export class SimdEngineFull implements Engine {
 
   private imageData: Uint8Array = new Uint8Array(0);
   private imageWidth: i32 = 0;
@@ -20,13 +20,12 @@ export class SimdEngine implements Engine {
     const numberOfPixels = this.imageData.length >> 2;
 
     if (this.energies.length < numberOfPixels) {
-      this.energies = new StaticArray<i16>(numberOfPixels + 8);
+      this.energies = new StaticArray<i16>(numberOfPixels);
     }
 
     this.energies = computeEnergiesWithSIMD(this.imageData, this.imageWidth, this.imageHeight, this.energies);
 
-    const seam = findVerticalSeam(this.energies, this.imageWidth, numberOfPixels);
-
+    const seam = findVerticalSeam(this.energies, this.imageWidth, numberOfPixels)
 
     this.imageData = removeSeam(
       seam,
