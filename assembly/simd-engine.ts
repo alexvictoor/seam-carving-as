@@ -25,7 +25,7 @@ export class SimdEngine implements Engine {
 
     this.energies = computeEnergiesWithSIMD(this.imageData, this.imageWidth, this.imageHeight, this.energies);
 
-    const seam = findVerticalSeam(this.energies, this.imageWidth, numberOfPixels);
+    const seam = findVerticalSeam(this.energies, this.imageWidth, this.imageHeight, numberOfPixels);
 
 
     this.imageData = removeSeam(

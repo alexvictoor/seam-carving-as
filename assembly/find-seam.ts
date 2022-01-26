@@ -3,9 +3,10 @@ let backPtrWeights: StaticArray<i8> = new StaticArray<i8>(0);
 export function findVerticalSeam(
   energies: StaticArray<i16>,
   imageWidth: i32,
+  imageHeight: i32,
   numberOfPixels: i32
 ): StaticArray<i32> {
-  const imageHeight = numberOfPixels / imageWidth;
+  //trace('imageHeight', 1, imageHeight);
   if (backPtrWeights.length < numberOfPixels) {
     backPtrWeights = new StaticArray<i8>(numberOfPixels);
   }

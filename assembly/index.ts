@@ -17,7 +17,7 @@ export interface Engine {
 }
 
 
-let engine: Engine = new RegularEngine();
+let engine: Engine = new SimdEngine2();
 
 export function shrinkWidth(srcImage: Uint8Array, width: i32): Uint8Array {
   /*currentImageData = srcImage;

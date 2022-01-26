@@ -76,9 +76,12 @@ const shrinkByHalf = (imageData: ImageData, fwdEnergy: boolean) => {
   wasm.__release(ptrArr);
   wasm.__release(resultPtr);*/
   var dataCopy = new Uint8ClampedArray(imageData.data);
-  const result = fwdEnergy
+  /*const result = fwdEnergy
   ? shrinkWidthWithForwardEnergy(dataCopy, originalWidth)
-  : shrinkWidth(dataCopy, originalWidth);
+  : shrinkWidth(dataCopy, originalWidth);*/
+  const result = shrinkWidth(dataCopy, originalWidth);
+
+  imageData = displayResultImage(imageData, result);
 
   let frameDelta = 0;
   const canvasCaption = document.getElementById("canvasCaption");

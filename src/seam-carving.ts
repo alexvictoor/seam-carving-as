@@ -1,13 +1,25 @@
+import { RegularEngine } from "./engine";
 
 
 let currentImageData: Uint8ClampedArray;
 let currentWidth: number;
 
+export interface Engine {
+  init(data: Uint8ClampedArray, width: number): void,
+  shrink(): Uint8ClampedArray
+}
+
+
+let engine: Engine = new RegularEngine();
+
 export function shrinkWidth(srcImage: Uint8ClampedArray, width: number) {
-  currentImageData = srcImage;
+  /*currentImageData = srcImage;
   currentWidth = width;
-  Seam.create(currentImageData, currentWidth);
+  Seam.create(currentImageData, currentWidth);*/
   //return shrinkImage();
+
+  engine.init(srcImage, width);
+  return engine.shrink();
 }
 export function shrinkWidthWithForwardEnergy(
   srcImage: Uint8ClampedArray,
@@ -20,10 +32,11 @@ export function shrinkWidthWithForwardEnergy(
 }
 
 export function shrinkImage(): Uint8ClampedArray {
-  const seam = Seam.recycle(currentImageData, currentWidth);
+  /*const seam = Seam.recycle(currentImageData, currentWidth);
   currentImageData = seam.shrinkWidth();
   currentWidth--;
-  return currentImageData;
+  return currentImageData;*/
+  return engine.shrink();
 }
 
 class Color {

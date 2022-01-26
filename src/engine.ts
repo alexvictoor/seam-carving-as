@@ -1,30 +1,32 @@
-import { Engine } from ".";
+import { Engine } from "./seam-carving";
 import { findVerticalSeam } from "./find-seam";
 import { computeEnergies, initEnergyPicture, removeSeamRGB } from "./energy";
 import { removeSeam } from "./remove-seam";
 
 export class RegularEngine implements Engine {
 
-  private imageData: Uint8Array = new Uint8Array(0);
-  private imageWidth: i32 = 0;
-  private imageHeight: i32 = 0;
+  private imageData: Uint8ClampedArray = new Uint8ClampedArray(0);
+  private imageWidth: number = 0;
+  private imageHeight: number = 0;
 
-  private energies: StaticArray<i16> = new StaticArray<i16>(0);
+  private energies: Int16Array = new Int16Array(0);
 
-  init(data: Uint8Array, width: i32): void {
+  init(data: Uint8ClampedArray, width: number): void {
     this.imageData = data;
     this.imageWidth = width;
     this.imageHeight = data.length / 4 / width;
     initEnergyPicture(data, this.imageWidth, this.imageHeight);
   }
-  shrink(): Uint8Array {
-    const numberOfPixels = this.imageData.length >> 2;
+  shrink(): Uint8ClampedArray {
+    const numberOfPixels = this.imageData.length / 4;
 
     if (this.energies.length < numberOfPixels) {
-      this.energies = new StaticArray<i16>(numberOfPixels + 8);
+      this.energies = new Int16Array(numberOfPixels + 8);
     }
 
     this.energies = computeEnergies(this.imageWidth, this.imageHeight);
+
+    //console.log({energies: this.energies})
 
     const seam = findVerticalSeam(this.energies, this.imageWidth, this.imageHeight, numberOfPixels);
 
@@ -33,12 +35,12 @@ export class RegularEngine implements Engine {
     this.imageData = removeSeam(
       seam,
       this.imageData,
-      <i16>this.imageWidth,
-      <i16>this.imageHeight
+      this.imageWidth,
+      this.imageHeight
     );
 
-    removeSeamRGB(seam, <i16>this.imageWidth,
-      <i16>this.imageHeight);
+    removeSeamRGB(seam, this.imageWidth,
+      this.imageHeight);
 
     
     this.imageWidth--;
@@ -50,7 +52,7 @@ export class RegularEngine implements Engine {
 
   /*
   @inline
-  private weightFrom(line: StaticArray<i32>, x: i16, width: i32): i32 {
+  private weightFrom(line: StaticArray<number>, x: i16, width: number): number {
     if (x < 0 || x >= width) {
       return i32.MAX_VALUE >> 1;
     }

@@ -4,7 +4,7 @@
     "asbuild:optimized": "asc assembly/index.ts -b build/optimized.wasm -t build/optimized.wat -O3 --exportRuntime --noAssert --enable simd",
     "asbuild": "npm run asbuild:untouched && npm run asbuild:optimized",
     "astest": "asp --verbose",
-    "dev-js": "npm run asbuild && cp build/*.map dist/ && cp build/*.wasm dist/ && cp src/*.jpg dist/ && parcel src/index.js.html",
+    "dev-js": "cp build/*.map dist/ && cp src/*.jpg dist/ && parcel src/index.js.html",
     "dev-as": "npm run asbuild && cp build/*.map dist/ && cp build/*.wasm dist/ && cp src/*.jpg dist/ && parcel src/index.as.html",
     "deploy": "parcel build  --public-url ./ src/index.html && git add dist && git commit -m \"auto deploy\" && git subtree push --prefix dist origin gh-pages"
   },
