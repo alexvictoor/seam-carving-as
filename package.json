@@ -6,7 +6,7 @@
     "astest": "asp --verbose",
     "dev-js": "cp build/*.map dist/ && cp src/*.jpg dist/ && parcel src/index.js.html",
     "dev": "npm run asbuild && cp build/*.map dist/ && cp build/*.wasm dist/ && cp src/*.jpg dist/ && parcel src/index.html",
-    "deploy": "parcel build  --public-url ./ src/index.html && git add dist && git commit -m \"auto deploy\" && git subtree push --prefix dist origin gh-pages"
+    "deploy": "parcel build  --public-url ./ src/index.html && git add dist && git commit -m \"auto deploy\" && git subtree push -f --prefix dist origin gh-pages"
   },
   "devDependencies": {
     "@as-pect/cli": "^6.2.4",
