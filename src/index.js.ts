@@ -92,11 +92,10 @@ const shrinkByHalf = (imageData: ImageData) => {
       const result = shrinkImage();
       imageData = displayResultImage(imageData, result);
       frameDelta += 10;
-      canvasCaption.innerHTML = `Width reduced by ${frameDelta}px`;
+      const processingTime = Date.now() - start;
+      canvasCaption.innerHTML = `Width reduced by ${frameDelta}px after ${processingTime}ms`;
       if (frameDelta < n) {
         nextFrame = requestAnimationFrame(shrinkOneSeam);
-      } else {
-        console.log((Date.now() - start) + 'ms')
       }
     };
     nextFrame = requestAnimationFrame(shrinkOneSeam);
@@ -104,7 +103,7 @@ const shrinkByHalf = (imageData: ImageData) => {
 
   shrink(originalWidth / 2);
 };
-
+/*
 const run = async () => {
   await new Promise((resolve) => window.addEventListener("load", resolve));
 
@@ -146,4 +145,5 @@ const run = async () => {
     shrinkByHalf(imageData, fwdEnergyFlag);
   });
 };
-run();
+run();*/
+export const jsShrinkByHalf = shrinkByHalf;

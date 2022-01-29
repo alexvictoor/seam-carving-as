@@ -14,7 +14,8 @@
 
 <body>
     <header>
-        <h2>Seam Carving in AssemblyScript</h2>
+        <h2>Seam Carving Bench</h2>
+
     </header>
 
     <main>
@@ -26,11 +27,13 @@
         </section>
         <section>
             <form>
-                <label>Seam Carving Algorithm</label>
-                <input type="radio" id="algo-as" name="algo" value="as" checked>
-                <label for="algo-as">AssemblyScript</label>
-                <input type="radio" id="algo-as-simd" name="algo" value="as-simd">
-                <label for="algo-as-simd">AssemblyScript SIMD</label>
+                <label>Seam Carving Implementation</label>
+                <input type="radio" id="implem-js" name="algo" value="js" checked>
+                <label for="implem-js">JavaScript</label>
+                <input type="radio" id="implem-as" name="algo" value="as">
+                <label for="implem-as">AssemblyScript</label>
+                <input type="radio" id="implem-as-simd" name="algo" value="as-simd">
+                <label for="implem-as-simd">AssemblyScript SIMD</label>
                 <label for="originalFile">Choose another image file</label>
                 <input type="file" id="originalFile" placeholder="Choose an image file" />
 

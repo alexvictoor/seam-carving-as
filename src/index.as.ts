@@ -1,4 +1,5 @@
 import loader from "@assemblyscript/loader";
+import { jsShrinkByHalf } from './index.js';
 
 //
 // OffscreenCanvas polyfill
@@ -59,7 +60,7 @@ const displayResultImage = (
   return resultImageData;
 };
 
-const shrinkByHalf = (imageData: ImageData, wasm: any, useSimd: boolean) => {
+const asShrinkByHalf = (imageData: ImageData, wasm: any, useSimd: boolean) => {
   if (nextFrame) {
     cancelAnimationFrame(nextFrame);
   }
@@ -91,12 +92,11 @@ const shrinkByHalf = (imageData: ImageData, wasm: any, useSimd: boolean) => {
       imageData = displayResultImage(imageData, resultArray);
       //__unpin(resultPtr);
       frameDelta += 10;
-      canvasCaption.innerHTML = `Width reduced by ${frameDelta}px`;
+      const processingTime = Date.now() - start;
+      canvasCaption.innerHTML = `Width reduced by ${frameDelta}px after ${processingTime}ms`;
       if (frameDelta < n) {
         nextFrame = requestAnimationFrame(shrinkOneSeam);
-      } else {
-        console.log((Date.now() - start) + 'ms')
-      }
+      } 
     };
     nextFrame = requestAnimationFrame(shrinkOneSeam);
   };
@@ -111,7 +111,16 @@ const run = async () => {
   console.log(wasm)
 
   let imageData: ImageData;
+  let useWasmFlag = false;
   let useSimdFlag = false;
+
+  const shrinkByHalf = (imageData: ImageData) => {
+    if (useWasmFlag) {
+      asShrinkByHalf(imageData, wasm, useSimdFlag);
+    } else {
+      jsShrinkByHalf(imageData);
+    }
+  }
 
   fetch("surfer-web.jpg")
     .then((response) => response.arrayBuffer())
@@ -124,7 +133,7 @@ const run = async () => {
     })
     .then((data) => {
       imageData = data;
-      shrinkByHalf(imageData, wasm, useSimdFlag);
+      shrinkByHalf(imageData);
     });
 
   document
@@ -133,18 +142,27 @@ const run = async () => {
       const files = (evt.target as any).files;
 
       imageData = await loadImage(files[0]);
-      shrinkByHalf(imageData, wasm, useSimdFlag);
+      shrinkByHalf(imageData);
     });
 
   document
-    .getElementById("algo-as")
+    .getElementById("implem-js")
     .addEventListener("click", () => {
+      useWasmFlag = false;
       useSimdFlag = false;
-      shrinkByHalf(imageData, wasm, useSimdFlag);
+      shrinkByHalf(imageData);
     });
-  document.getElementById("algo-as-simd").addEventListener("click", () => {
+  document
+    .getElementById("implem-as")
+    .addEventListener("click", () => {
+      useWasmFlag = true;
+      useSimdFlag = false;
+      shrinkByHalf(imageData);
+    });
+  document.getElementById("implem-as-simd").addEventListener("click", () => {
+    useWasmFlag = true;
     useSimdFlag = true;
-    shrinkByHalf(imageData, wasm, useSimdFlag);
+    shrinkByHalf(imageData);
   });
 };
 run();
