@@ -48,7 +48,7 @@ const displayResultImage = (
   wasmMemoryArray: Uint8Array
 ) => {
   const resultCanvas = document.getElementById("canvas") as HTMLCanvasElement;
-  const width = imageData.width - 1;
+  const width = imageData.width - 10;
   const height = imageData.height;
   resultCanvas.width = width;
   resultCanvas.height = height;
@@ -59,7 +59,7 @@ const displayResultImage = (
   return resultImageData;
 };
 
-const shrinkByHalf = (imageData: ImageData, wasm: any, fwdEnergy: boolean) => {
+const shrinkByHalf = (imageData: ImageData, wasm: any, useSimd: boolean) => {
   if (nextFrame) {
     cancelAnimationFrame(nextFrame);
   }
@@ -72,9 +72,9 @@ const shrinkByHalf = (imageData: ImageData, wasm: any, fwdEnergy: boolean) => {
     __newArray(UINT8ARRAY_ID, imageData.data)
   );
 
-  const resultPtr = fwdEnergy
-    ? shrinkWidthWithForwardEnergy(ptrArr, originalWidth)
-    : shrinkWidth(ptrArr, originalWidth);
+  const resultPtr = useSimd
+    ? shrinkWidth(ptrArr, originalWidth, true)
+    : shrinkWidth(ptrArr, originalWidth, false);
   const resultArray = __getUint8ArrayView(resultPtr);
   imageData = displayResultImage(imageData, resultArray);
   __unpin(ptrArr);
@@ -90,7 +90,8 @@ const shrinkByHalf = (imageData: ImageData, wasm: any, fwdEnergy: boolean) => {
       const resultArray = __getUint8ArrayView(resultPtr);
       imageData = displayResultImage(imageData, resultArray);
       //__unpin(resultPtr);
-      canvasCaption.innerHTML = `Width reduced by ${frameDelta++}px`;
+      frameDelta += 10;
+      canvasCaption.innerHTML = `Width reduced by ${frameDelta}px`;
       if (frameDelta < n) {
         nextFrame = requestAnimationFrame(shrinkOneSeam);
       } else {
@@ -110,7 +111,7 @@ const run = async () => {
   console.log(wasm)
 
   let imageData: ImageData;
-  let fwdEnergyFlag = false;
+  let useSimdFlag = false;
 
   fetch("surfer-web.jpg")
     .then((response) => response.arrayBuffer())
@@ -123,7 +124,7 @@ const run = async () => {
     })
     .then((data) => {
       imageData = data;
-      shrinkByHalf(imageData, wasm, fwdEnergyFlag);
+      shrinkByHalf(imageData, wasm, useSimdFlag);
     });
 
   document
@@ -132,18 +133,18 @@ const run = async () => {
       const files = (evt.target as any).files;
 
       imageData = await loadImage(files[0]);
-      shrinkByHalf(imageData, wasm, fwdEnergyFlag);
+      shrinkByHalf(imageData, wasm, useSimdFlag);
     });
 
   document
-    .getElementById("algo-classic")
+    .getElementById("algo-as")
     .addEventListener("click", () => {
-      fwdEnergyFlag = false;
-      shrinkByHalf(imageData, wasm, fwdEnergyFlag);
+      useSimdFlag = false;
+      shrinkByHalf(imageData, wasm, useSimdFlag);
     });
-  document.getElementById("algo-fwd").addEventListener("click", () => {
-    fwdEnergyFlag = true;
-    shrinkByHalf(imageData, wasm, fwdEnergyFlag);
+  document.getElementById("algo-as-simd").addEventListener("click", () => {
+    useSimdFlag = true;
+    shrinkByHalf(imageData, wasm, useSimdFlag);
   });
 };
 run();

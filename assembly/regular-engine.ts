@@ -24,6 +24,8 @@ export class RegularEngine implements Engine {
       this.energies = new StaticArray<i16>(numberOfPixels + 8);
     }
 
+    for (let index = 0; index < 10; index++) {
+    
     this.energies = computeEnergies(this.imageWidth, this.imageHeight);
 
     const seam = findVerticalSeam(this.energies, this.imageWidth, this.imageHeight, numberOfPixels);
@@ -42,6 +44,7 @@ export class RegularEngine implements Engine {
 
     
     this.imageWidth--;
+    }
 
     return this.imageData;
   }

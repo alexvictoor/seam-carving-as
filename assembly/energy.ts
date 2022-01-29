@@ -17,11 +17,11 @@ export function initEnergyPicture(
   topPadding = dataWidth;
   const dataLength = dataWidth * (height + 2) + 8;
 
-  if (redData.length < dataLength) {
-    redData = new StaticArray<u8>(dataLength);
-    greenData = new StaticArray<u8>(dataLength);
-    blueData = new StaticArray<u8>(dataLength);
-  }
+  redData = new StaticArray<u8>(dataLength);
+  greenData = new StaticArray<u8>(dataLength);
+  blueData = new StaticArray<u8>(dataLength);
+
+  latestSeam = new StaticArray<i32>(0);
 
   const numberOfPixels = pictureData.length >> 2;
 
@@ -46,10 +46,7 @@ export function initEnergyPicture(
   }
 }
 
-export function computeEnergies(
-  width: i32,
-  height: i32
-): StaticArray<i16> {
+export function computeEnergies(width: i32, height: i32): StaticArray<i16> {
   const dataWidth = width + 2;
 
   let colorIndex: i32 = topPadding + 1;
@@ -57,12 +54,12 @@ export function computeEnergies(
   const useLatestSeam = latestSeam.length == height;
 
   let ptr = 0;
-  let ptrBeginLine = 0 - (width);
+  let ptrBeginLine = 0 - width;
 
   let colorIndexBeginLine = topPadding + 1 - dataWidth;
 
   for (let y: i32 = 0; y < height; y++) {
-    ptrBeginLine = ptrBeginLine + (width);
+    ptrBeginLine = ptrBeginLine + width;
     ptr = ptrBeginLine;
 
     colorIndexBeginLine += dataWidth;
@@ -86,16 +83,45 @@ export function computeEnergies(
 
       //trace('offset', 4, topOffset, rightOffset, belowOffset, leftOffset);
 
-      const energy = (
-        <i32>Math.abs(<i16>unchecked(redData[topOffset]) - <i16>unchecked(redData[belowOffset])) +
-        <i32>Math.abs(<i16>unchecked(redData[leftOffset]) - <i16>unchecked(redData[rightOffset])) +
-        <i32>Math.abs(<i16>unchecked(greenData[topOffset]) - <i16>unchecked(greenData[belowOffset])) +
-        <i32>Math.abs(<i16>unchecked(greenData[leftOffset]) - <i16>unchecked(greenData[rightOffset])) +
-        <i32>Math.abs(<i16>unchecked(blueData[topOffset]) - <i16>unchecked(blueData[belowOffset])) +
-        <i32>Math.abs(<i16>unchecked(blueData[leftOffset]) - <i16>unchecked(blueData[rightOffset])));
+      const energy =
+        <i32>(
+          Math.abs(
+            <i16>unchecked(redData[topOffset]) -
+              <i16>unchecked(redData[belowOffset])
+          )
+        ) +
+        <i32>(
+          Math.abs(
+            <i16>unchecked(redData[leftOffset]) -
+              <i16>unchecked(redData[rightOffset])
+          )
+        ) +
+        <i32>(
+          Math.abs(
+            <i16>unchecked(greenData[topOffset]) -
+              <i16>unchecked(greenData[belowOffset])
+          )
+        ) +
+        <i32>(
+          Math.abs(
+            <i16>unchecked(greenData[leftOffset]) -
+              <i16>unchecked(greenData[rightOffset])
+          )
+        ) +
+        <i32>(
+          Math.abs(
+            <i16>unchecked(blueData[topOffset]) -
+              <i16>unchecked(blueData[belowOffset])
+          )
+        ) +
+        <i32>(
+          Math.abs(
+            <i16>unchecked(blueData[leftOffset]) -
+              <i16>unchecked(blueData[rightOffset])
+          )
+        );
 
-        
-      unchecked(energies[ptr] = <i16>energy);
+      unchecked((energies[ptr] = <i16>energy));
       colorIndex += 1;
     }
   }
@@ -108,7 +134,7 @@ export function removeSeamRGB(
   width: i16,
   height: i16
 ): void {
-  //latestSeam = seam;
+  latestSeam = seam;
 
   const oldHeight = height;
   const oldWidth = width;

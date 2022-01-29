@@ -7,10 +7,10 @@
  */
 
 import { computeEnergies } from "../picture";
-import { computeEnergiesWithSIMD, initEnergyPicture, latestSeam } from "../simd-energy2";
+import { computeEnergiesWithSIMD, initEnergyPicture, latestSeam } from "../simd-energy";
 //import { computeEnergiesWithSIMD } from "../simd-energy";
 import { SimdEngine } from "../simd-engine";
-import { SimdEngine as SimEngine2 } from "../simd-engine2";
+import { SimdEngine as SimEngine2 } from "../simd-engine";
 import { SimdEngineFull } from "../simd-engine-full";
 import { RegularEngine } from "../regular-engine";
 

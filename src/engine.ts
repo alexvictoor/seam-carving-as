@@ -24,6 +24,8 @@ export class RegularEngine implements Engine {
       this.energies = new Int16Array(numberOfPixels + 8);
     }
 
+    for (let index = 0; index < 10; index++) {
+      
     this.energies = computeEnergies(this.imageWidth, this.imageHeight);
 
     //console.log({energies: this.energies})
@@ -44,6 +46,7 @@ export class RegularEngine implements Engine {
 
     
     this.imageWidth--;
+    }
 
     return this.imageData;
   }

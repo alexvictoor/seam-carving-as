@@ -1,4 +1,4 @@
-import { shrinkImage, shrinkWidth, shrinkWidthWithForwardEnergy } from "./seam-carving";
+import { shrinkImage, shrinkWidth } from "./seam-carving";
 
 //
 // OffscreenCanvas polyfill
@@ -47,7 +47,7 @@ const displayResultImage = (
   wasmMemoryArray: Uint8ClampedArray
 ) => {
   const resultCanvas = document.getElementById("canvas") as HTMLCanvasElement;
-  const width = imageData.width - 1;
+  const width = imageData.width - 10;
   const height = imageData.height;
   resultCanvas.width = width;
   resultCanvas.height = height;
@@ -58,7 +58,7 @@ const displayResultImage = (
   return resultImageData;
 };
 
-const shrinkByHalf = (imageData: ImageData, fwdEnergy: boolean) => {
+const shrinkByHalf = (imageData: ImageData) => {
   if (nextFrame) {
     cancelAnimationFrame(nextFrame);
   }
@@ -91,7 +91,8 @@ const shrinkByHalf = (imageData: ImageData, fwdEnergy: boolean) => {
     const shrinkOneSeam = () => {
       const result = shrinkImage();
       imageData = displayResultImage(imageData, result);
-      canvasCaption.innerHTML = `Width reduced by ${frameDelta++}px`;
+      frameDelta += 10;
+      canvasCaption.innerHTML = `Width reduced by ${frameDelta}px`;
       if (frameDelta < n) {
         nextFrame = requestAnimationFrame(shrinkOneSeam);
       } else {
